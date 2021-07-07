@@ -18,10 +18,20 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+
+	echotrace "github.com/signalfx/signalfx-go-tracing/contrib/labstack/echo"
+	"github.com/signalfx/signalfx-go-tracing/tracing"	
 )
 
 const Limit = 20
 const NazotteLimit = 50
+
+const (
+	// ServiceName contains name of this service. This will show up on traces
+	DefaultServiceName = "isuumo"
+	// TracingEndpoint contains a url to send traces
+	DefaultTracingEndpoint = "http://localhost:9080/v1/trace"
+)
 
 var db *sqlx.DB
 var mySQLConnectionData *MySQLConnectionEnv
@@ -239,6 +249,19 @@ func init() {
 }
 
 func main() {
+	tracingEndpoint := os.Getenv("ECHO_TRACING_ENDPOINT")
+	if tracingEndpoint == "" {
+		tracingEndpoint = DefaultTracingEndpoint
+	}
+
+	serviceName := os.Getenv("ECHO_SERVICE_NAME")
+	if serviceName == "" {
+		serviceName = DefaultServiceName
+	}
+
+	tracing.Start(tracing.WithEndpointURL(tracingEndpoint), tracing.WithServiceName(serviceName))
+	defer tracing.Stop()
+	
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
@@ -247,6 +270,7 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(echotrace.Middleware())
 
 	// Initialize
 	e.POST("/initialize", initialize)
