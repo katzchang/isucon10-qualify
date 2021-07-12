@@ -37,7 +37,8 @@ services:
       SERVER_PORT: 1323
       ECHO_SERVICE_NAME: isuumo
       ECHO_TRACING_ENDPOINT: http://host.docker.internal:9080/v1/trace
-      
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "1323:1323"
     depends_on:
