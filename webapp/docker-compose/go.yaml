@@ -33,6 +33,11 @@ services:
       MYSQL_PASS: isucon
       MYSQL_HOST: mysql
       SERVER_PORT: 1323
+      SERVER_PORT: 1323
+      SERVER_PORT: 1323
+      ECHO_SERVICE_NAME: isuumo
+      ECHO_TRACING_ENDPOINT: http://host.docker.internal:9080/v1/trace
+      
     ports:
       - "1323:1323"
     depends_on:
