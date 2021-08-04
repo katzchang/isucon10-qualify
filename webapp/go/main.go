@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -23,7 +24,9 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
 	// "go.opentelemetry.io/otel/attribute"
-	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	// stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	// oteltrace "go.opentelemetry.io/otel/trace"
@@ -250,10 +253,19 @@ func init() {
 var tracer = otel.Tracer("gin-server")
 
 func initTracer() *sdktrace.TracerProvider {
-	exporter, err := stdout.New(stdout.WithPrettyPrint())
+	opts := []otlptracegrpc.Option{
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint(os.Getenv("OTEL_TRACE_GRPC_ENDPOINT")),
+		otlptracegrpc.WithReconnectionPeriod(50 * time.Millisecond),
+	}
+
+	client := otlptracegrpc.NewClient(opts...)
+	ctx := context.Background()
+	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	tp := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithBatcher(exporter),

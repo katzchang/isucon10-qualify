@@ -33,6 +33,7 @@ services:
       MYSQL_PASS: isucon
       MYSQL_HOST: mysql
       SERVER_PORT: 1323
+      OTEL_TRACE_GRPC_ENDPOINT: 10.0.1.32:4317
     ports:
       - "1323:1323"
     depends_on:
