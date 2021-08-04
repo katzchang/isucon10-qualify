@@ -896,7 +896,7 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 }
 
 func searchEstateNazotte(c echo.Context) error {
-	_, span := tracer.Start(c.Request().Context(), "searchEstateNazotte")
+	ctx, span := tracer.Start(c.Request().Context(), "searchEstateNazotte---")
 	defer span.End()
 
 	coordinates := Coordinates{}
@@ -912,6 +912,7 @@ func searchEstateNazotte(c echo.Context) error {
 
 	b := coordinates.getBoundingBox()
 	estatesInBoundingBox := []Estate{}
+	_, span2 := tracer.Start(ctx, "searchEstateNazotte/span2")
 	query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC`
 	err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 	if err == sql.ErrNoRows {
@@ -921,9 +922,12 @@ func searchEstateNazotte(c echo.Context) error {
 		c.Echo().Logger.Errorf("database execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+        span2.End()
 
+	ctx3, span3 := tracer.Start(ctx, "searchEstateNazotte/span3")
 	estatesInPolygon := []Estate{}
 	for _, estate := range estatesInBoundingBox {
+		_, spanx := tracer.Start(ctx3, "searchEstateNazotte/on-each-estate")
 		validatedEstate := Estate{}
 
 		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
@@ -939,8 +943,11 @@ func searchEstateNazotte(c echo.Context) error {
 		} else {
 			estatesInPolygon = append(estatesInPolygon, validatedEstate)
 		}
+		spanx.End()
 	}
+	span3.End()
 
+	_, span4 := tracer.Start(ctx, "searchEstateNazotte/span4")
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
 	if len(estatesInPolygon) > NazotteLimit {
@@ -949,6 +956,7 @@ func searchEstateNazotte(c echo.Context) error {
 		re.Estates = estatesInPolygon
 	}
 	re.Count = int64(len(re.Estates))
+	span4.End()
 
 	return c.JSON(http.StatusOK, re)
 }
