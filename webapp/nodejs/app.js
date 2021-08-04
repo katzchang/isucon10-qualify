@@ -1,5 +1,7 @@
 "use strict";
 
+const tracer = require('signalfx-tracing').init()
+
 const express = require("express");
 const morgan = require("morgan");
 const multer = require("multer");
@@ -25,7 +27,7 @@ const dbinfo = {
   user: process.env.MYSQL_USER ?? "isucon",
   password: process.env.MYSQL_PASS ?? "isucon",
   database: process.env.MYSQL_DBNAME ?? "isuumo",
-  connectionLimit: 10,
+  connectionLimit: 500,
 };
 
 const app = express();
@@ -256,6 +258,9 @@ app.get("/api/chair/:id", async (req, res, next) => {
   const query = promisify(connection.query.bind(connection));
   try {
     const id = req.params.id;
+    const activeSpan = tracer.scope().active();
+    activeSpan.setTag('id', id);
+
     const [chair] = await query("SELECT * FROM chair WHERE id = ?", [id]);
     if (chair == null || chair.stock <= 0) {
       res.status(404).send("Not Found");

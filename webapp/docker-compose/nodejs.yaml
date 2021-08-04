@@ -33,6 +33,9 @@ services:
       MYSQL_PASS: isucon
       MYSQL_HOST: mysql
       SERVER_PORT: 1323
+      SIGNALFX_SERVICE_NAME: isuumo-nodejs
+      SIGNALFX_ENDPOINT_URL: http://10.0.1.135:9080/v1/trace
+      SIGNALFX_SPAN_TAGS: deployment.environment:lab
     ports:
       - "1323:1323"
     depends_on:
