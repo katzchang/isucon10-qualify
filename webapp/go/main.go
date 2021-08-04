@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/csv"
 	"encoding/json"
@@ -18,6 +19,14 @@ import (
 	"github.com/labstack/echo/v4"
         "github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
+
+	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
+	"go.opentelemetry.io/otel"
+	// "go.opentelemetry.io/otel/attribute"
+	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/propagation"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	// oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 const Limit = 20
@@ -238,7 +247,30 @@ func init() {
 	json.Unmarshal(jsonText, &estateSearchCondition)
 }
 
+var tracer = otel.Tracer("gin-server")
+
+func initTracer() *sdktrace.TracerProvider {
+	exporter, err := stdout.New(stdout.WithPrettyPrint())
+	if err != nil {
+		log.Fatal(err)
+	}
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithBatcher(exporter),
+	)
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	return tp
+}
+
 func main() {
+	tp := initTracer()
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			log.Printf("Error shutting down tracer provider: %v", err)
+		}
+	}()
+
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
@@ -247,6 +279,7 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	e.Use(otelecho.Middleware("my-server"))
 
 	// Initialize
 	e.POST("/initialize", initialize)
@@ -851,6 +884,9 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 }
 
 func searchEstateNazotte(c echo.Context) error {
+	_, span := tracer.Start(c.Request().Context(), "searchEstateNazotte")
+	defer span.End()
+
 	coordinates := Coordinates{}
 	err := c.Bind(&coordinates)
 	if err != nil {
