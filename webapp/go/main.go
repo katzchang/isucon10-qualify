@@ -30,6 +30,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	// oteltrace "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const Limit = 20
@@ -914,6 +915,7 @@ func searchEstateNazotte(c echo.Context) error {
 	estatesInBoundingBox := []Estate{}
 	_, span2 := tracer.Start(ctx, "searchEstateNazotte/span2")
 	query := `SELECT * FROM estate WHERE latitude <= ? AND latitude >= ? AND longitude <= ? AND longitude >= ? ORDER BY popularity DESC, id ASC`
+	span2.SetAttributes(attribute.String("query", query))
 	err = db.Select(&estatesInBoundingBox, query, b.BottomRightCorner.Latitude, b.TopLeftCorner.Latitude, b.BottomRightCorner.Longitude, b.TopLeftCorner.Longitude)
 	if err == sql.ErrNoRows {
 		c.Echo().Logger.Infof("select * from estate where latitude ...", err)
@@ -932,6 +934,7 @@ func searchEstateNazotte(c echo.Context) error {
 
 		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
 		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
+		spanx.SetAttributes(attribute.String("query", query))
 		err = db.Get(&validatedEstate, query, estate.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -950,6 +953,8 @@ func searchEstateNazotte(c echo.Context) error {
 	_, span4 := tracer.Start(ctx, "searchEstateNazotte/span4")
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
+	span4.SetAttributes(attribute.Int("estatesInPolygon", len(estatesInPolygon)))
+	span4.SetAttributes(attribute.Int("NazotteLimit", NazotteLimit))
 	if len(estatesInPolygon) > NazotteLimit {
 		re.Estates = estatesInPolygon[:NazotteLimit]
 	} else {
