@@ -9,6 +9,14 @@ import mysql.connector
 from sqlalchemy.pool import QueuePool
 from humps import camelize
 
+from opentelemetry import trace
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+
 LIMIT = 20
 NAZOTTE_LIMIT = 50
 
@@ -16,6 +24,15 @@ chair_search_condition = json.load(open("../fixture/chair_condition.json", "r"))
 estate_search_condition = json.load(open("../fixture/estate_condition.json", "r"))
 
 app = flask.Flask(__name__)
+
+resource = Resource(attributes={
+    "service.name": "isuumo"
+})
+tracer_provider = TracerProvider(resource=resource)
+otlp_exporter = OTLPSpanExporter(endpoint=getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"), insecure=True)
+span_processor = BatchSpanProcessor(otlp_exporter)
+tracer_provider.add_span_processor(span_processor)
+FlaskInstrumentor().instrument_app(app, tracer_provider=tracer_provider)
 
 mysql_connection_env = {
     "host": getenv("MYSQL_HOST", "127.0.0.1"),
