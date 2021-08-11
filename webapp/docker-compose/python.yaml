@@ -33,11 +33,15 @@ services:
       MYSQL_PASS: isucon
       MYSQL_HOST: mysql
       SERVER_PORT: 1323
+      PYTHONPATH: /usr/bin/env python3
+      OTEL_SERVICE_NAME: isuumo-python2
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://10.0.1.244:4317
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=lab
     ports:
       - "1323:1323"
     depends_on:
       - mysql
-    command: python /python/app.py
+    command: splunk-py-trace python /python/app.py
 
   frontend:
     build: ../frontend

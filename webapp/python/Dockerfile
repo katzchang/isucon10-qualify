@@ -13,5 +13,7 @@ RUN wget -q https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VE
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+RUN pip install splunk-opentelemetry[all]
+RUN splunk-py-trace-bootstrap
 
 COPY . .
