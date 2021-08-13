@@ -1,33 +1,53 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    backports (3.18.2)
-    kgio (2.11.3)
+    jaeger-client (1.0.0)
+      opentracing (~> 0.3)
+      thrift
+    kgio (2.11.4)
     multi_json (1.15.0)
     mustermann (1.1.1)
       ruby2_keywords (~> 0.0.1)
     mysql2 (0.5.3)
-    mysql2-cs-bind (0.0.7)
+    mysql2-cs-bind (0.1.0)
       mysql2
+    opentracing (0.5.0)
     rack (2.2.3)
-    rack-protection (2.0.8.1)
+    rack-protection (2.1.0)
       rack
-    raindrops (0.19.1)
-    ruby2_keywords (0.0.2)
-    sinatra (2.0.8.1)
+    rack-tracer (0.9.0)
+      opentracing (~> 0.4)
+    raindrops (0.19.2)
+    ruby2_keywords (0.0.5)
+    signalfx-mysql2-instrumentation (0.1.1)
+      opentracing (~> 0.3)
+    signalfx-nethttp-instrumentation (0.2.0)
+      opentracing (~> 0.3)
+    signalfx-rack-tracer (0.1.0)
+      opentracing (~> 0.4)
+    signalfx-restclient-instrumentation (0.1.0)
+      opentracing (~> 0.3)
+    signalfx-sinatra-instrumentation (0.1.0)
+      opentracing (~> 0.3)
+      rack-tracer (~> 0.8)
+    signalfx-tracing (2.3.1)
+      jaeger-client (~> 1.0.0)
+      opentracing (> 0.3.0)
+      signalfx-nethttp-instrumentation (~> 0.2.0)
+    sinatra (2.1.0)
       mustermann (~> 1.0)
-      rack (~> 2.0)
-      rack-protection (= 2.0.8.1)
+      rack (~> 2.2)
+      rack-protection (= 2.1.0)
       tilt (~> 2.0)
-    sinatra-contrib (2.0.8.1)
-      backports (>= 2.8.2)
+    sinatra-contrib (2.1.0)
       multi_json
       mustermann (~> 1.0)
-      rack-protection (= 2.0.8.1)
-      sinatra (= 2.0.8.1)
+      rack-protection (= 2.1.0)
+      sinatra (= 2.1.0)
       tilt (~> 2.0)
+    thrift (0.14.2)
     tilt (2.0.10)
-    unicorn (5.6.0)
+    unicorn (6.0.0)
       kgio (~> 2.6)
       raindrops (~> 0.7)
 
@@ -37,6 +57,12 @@ PLATFORMS
 DEPENDENCIES
   mysql2
   mysql2-cs-bind
+  signalfx-mysql2-instrumentation
+  signalfx-nethttp-instrumentation
+  signalfx-rack-tracer
+  signalfx-restclient-instrumentation
+  signalfx-sinatra-instrumentation
+  signalfx-tracing
   sinatra
   sinatra-contrib
   unicorn

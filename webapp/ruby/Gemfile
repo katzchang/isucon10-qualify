@@ -7,3 +7,10 @@ gem "sinatra-contrib"
 gem "mysql2"
 gem "mysql2-cs-bind"
 gem "unicorn"
+gem 'signalfx-tracing'
+gem 'signalfx-sinatra-instrumentation'
+gem 'signalfx-mysql2-instrumentation'
+gem 'signalfx-rack-tracer'
+gem 'signalfx-restclient-instrumentation'
+gem 'signalfx-nethttp-instrumentation'
+

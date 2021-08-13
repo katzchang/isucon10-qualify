@@ -2,8 +2,15 @@ require 'sinatra'
 require 'mysql2'
 require 'mysql2-cs-bind'
 require 'csv'
+require 'signalfx/tracing'
+
+SignalFx::Tracing::Instrumenter.configure(
+  auto_instrument: true
+)
 
 class App < Sinatra::Base
+  register Sinatra::Instrumentation
+
   LIMIT = 20
   NAZOTTE_LIMIT = 50
   CHAIR_SEARCH_CONDITION = JSON.parse(File.read('../fixture/chair_condition.json'), symbolize_names: true)
