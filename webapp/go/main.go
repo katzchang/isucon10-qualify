@@ -18,18 +18,15 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
-        "github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 	"go.opentelemetry.io/otel"
-	// "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	// stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	// oteltrace "go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/attribute"
 )
 
